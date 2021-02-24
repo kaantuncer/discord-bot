@@ -3,16 +3,18 @@ const axios = require('axios')
 const emojiUnicode = require("emoji-unicode");
 
 const { Client } = require('discord.js');
-const e = require('express');
+const credentials = require('./credentials.js')
+const musicDao = require('./musicDao.js')
 
 const client = new Client({
     partials: ['MESSAGE', 'REACTION']
 
 });
 const PREFIX = "$";
-
 var timerMap = new Map();
-var API = "API";
+
+
+var API =credentials.databaseAPI;
 function timeout(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -38,16 +40,16 @@ async function mentionPeople(message) {
 async function timer() {
     while (true) {
 
-        (await client.guilds.fetch("CHANNEL ID")).channels.cache.filter(entry => entry.type == 'voice').forEach((entry) => {
+        (await client.guilds.fetch("644482131699171348")).channels.cache.filter(entry => entry.type == 'voice').forEach((entry) => {
 
             entry["members"].forEach((guildMember) => {
 
-                if (entry["id"] != "VOICE CHANNEL") {
+                if (entry["id"] != "657627277873512480") {
                     var type = 0;
-                    if (entry["parent"]["id"] == "STUDY CATEGORY") {   //CHECK IF ITS IN STUDY CATEGORY
+                    if (entry["parent"]["id"] == "775400757406072892") {   //CHECK IF ITS IN STUDY CATEGORY
 
 
-                        if (entry["id"] == "LIBRARY") {         //CHECK IF ITS LIBRARY VOICE CHANNEL
+                        if (entry["id"] == "775420412238495766") {         //CHECK IF ITS LIBRARY VOICE CHANNEL
                             type = 2;
                         }
                         else {              //OTHER STUDY VOICE CHANNELS
@@ -154,7 +156,13 @@ client.on('message', async (message) => {
         console.log(message.content)
         const [CMD_NAME, ...args] = message.content.trim().substring(PREFIX.length).split(/\s+/);
 
-        if (CMD_NAME === "etkinlik") {
+        if (CMD_NAME === "help") {
+            
+            return message.channel.send("Possible commands:\n$etkinlik XX:YY DAY/MONTH/YEAR\n$play SONG URL or SONG NAME\n$skip\n$stop\n$queue")
+
+        }
+
+        else if (CMD_NAME === "etkinlik") {
             try {
                 if (!args[0] || !args[1] || args[0][2] != ':' || args[0].length != 5 || args[1].length != 10 || args[1][2] != '/' || args[1][5] != '/') {
                     throw "Wrong format"
@@ -167,6 +175,23 @@ client.on('message', async (message) => {
             catch (e) {
                 message.reply("Wrong format ($etkinlik 00:00 DAY/MONTH/YEAR)")
             }
+        }
+        else if (CMD_NAME == "play") {
+            musicDao.execute(message);
+            return;
+        } else if (CMD_NAME == "skip") {
+            musicDao.skip(message);
+            return;
+        } else if (CMD_NAME == "stop") {
+            musicDao.stop(message);
+            return;
+        }
+        else if (CMD_NAME == "queue") {
+            musicDao.queue(message);
+            return;
+        } 
+        else {
+            message.channel.send("You need to enter a valid command!");
         }
 
     }
@@ -305,4 +330,4 @@ client.on('messageDelete', async (message) => {
 
 })
 
-client.login("BOT TOKEN");
+client.login(credentials.botToken);
