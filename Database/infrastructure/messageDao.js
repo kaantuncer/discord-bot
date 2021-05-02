@@ -82,8 +82,7 @@ module.exports.addTimerMessage = async function (messageId, date, time, channelI
 module.exports.removeTimerMessage = async function (messageId, userId, isDeleted) {
 
     promise = await new Promise((resolve, reject) => {
-        
-        let sql = "DELETE tm , r FROM timermessages as tm INNER JOIN reactions as r ON tm.messageId = r.messageId WHERE tm.messageId = ? "
+        let sql = "DELETE tm , r FROM timermessages as tm LEFT JOIN reactions as r ON tm.messageId = r.messageId WHERE tm.messageId = ? "
         let condition = [messageId]
 
         connection.query(sql, condition, (err, result) => {

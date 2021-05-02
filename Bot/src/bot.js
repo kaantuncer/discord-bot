@@ -19,6 +19,46 @@ function timeout(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function incrementSabahlama(idList) {
+    var data = {
+        "idList":idList
+    };
+
+    axios.post(API + "sabahlamaUpdate", data).then(result => {
+    }).then((response) => {
+    }, (error) => {
+        console.log(error)
+    });
+
+}
+
+async function sendEveryoneAMessage(message) {
+    if (!message) {
+        return;
+    }
+    idList = [];
+    (await client.guilds.fetch("644482131699171348")).channels.cache.filter(entry => entry.type == 'voice').forEach((entry) => {
+        entry["members"].forEach((guildMember) => {
+
+            idList.push(guildMember.id);
+        })
+    })
+    if (message == "Lütfen Uyuyun !!!") {
+        console.log("Sabahlama:"+idList)
+        await incrementSabahlama(idList);
+
+    }
+    idList.forEach(async function (id) {
+        try {
+            const user = await client.users.fetch(id).catch(() => null);
+            user.send(message);
+        }
+        catch (e) {
+            console.log("USER NOT FOUND !! : " + id)
+        }
+    })
+}
+
 async function mentionPeople(message) {
     await axios.get(API + "getTimerMessageUserSet", { "params": { "messageId": message.messageId } }).then(async function (result) {
         const channel = await client.channels.cache.find(channel => channel.id === message.channelId)
@@ -39,14 +79,13 @@ async function mentionPeople(message) {
 
 async function timer() {
     while (true) {
-
         (await client.guilds.fetch("644482131699171348")).channels.cache.filter(entry => entry.type == 'voice').forEach((entry) => {
 
             entry["members"].forEach((guildMember) => {
 
                 if (entry["id"] != "657627277873512480") {
                     var type = 0;
-                    if (entry["parent"]["id"] == "775400757406072892") {   //CHECK IF ITS IN STUDY CATEGORY
+                    if ( entry["parent"] != null && entry["parent"]["id"] == "775400757406072892") {   //CHECK IF ITS IN STUDY CATEGORY
 
 
                         if (entry["id"] == "775420412238495766") {         //CHECK IF ITS LIBRARY VOICE CHANNEL
@@ -62,6 +101,7 @@ async function timer() {
                         "userId": guildMember["user"]["id"],
                         "type": type
                     };
+                    console.log(data["username"] +" ---> " + data["type"])
 
                     axios.post(API + "voiceChannelUpdate", data).then(result => {
                     }).then((response) => {
@@ -72,15 +112,15 @@ async function timer() {
                 
             })
         })
+        var currentTime = new Date();
+        var hours = currentTime.getHours()
+        var minutes = currentTime.getMinutes() + 5
+        var day = currentTime.getDate()
+        var month = currentTime.getMonth() + 1
+        var year = currentTime.getFullYear()
         Object.keys(timerMap).forEach(async function (key) {
             var timeArray = timerMap[key]["time"].split(":")
             var dateArray = timerMap[key]["date"].split("/")
-            var currentTime = new Date();
-            var hours = currentTime.getHours()
-            var minutes = currentTime.getMinutes() + 5
-            var day = currentTime.getDate()
-            var month = currentTime.getMonth() + 1
-            var year = currentTime.getFullYear()
             if (minutes >= 60) {
                 minutes = minutes - 60
                 hours += 1;
@@ -101,7 +141,6 @@ async function timer() {
             console.log("Current Time: " + hours + ":" + minutes + " // " + day + "/" + month + "/" + year + " - Target Time: " + timeArray + " // " + dateArray)
             if (timeArray[0] == hours && timeArray[1] == minutes && dateArray[0] == day && dateArray[1] == month && dateArray[2] == year) {
                 await mentionPeople(timerMap[key])
-
                 var data = { "data": { "messageId": timerMap[key]["messageId"], "isDeleted": 0, "userId": "."}};
                 await axios.delete(API + "removeTimerMessage", data).then(result => {
                 })
@@ -116,6 +155,9 @@ async function timer() {
             }
         });
 
+        if (hours == "06" && minutes == "05") {
+            sendEveryoneAMessage("Lütfen Uyuyun !!!");
+        }
 
         await timeout(60000)
     }
@@ -316,7 +358,6 @@ client.on('messageDelete', async (message) => {
 
     if (timerMap[message.id]) {
         var data = { "data": { "messageId": message.id, "isDeleted": 1, "userId": message.author.id} };
-        
         await axios.delete(API + "removeTimerMessage", data).then(result => {
         })
         timerMap = new Map()
@@ -325,7 +366,6 @@ client.on('messageDelete', async (message) => {
                 timerMap[element.messageId] = element
             });
         })
-
     }
 
 })

@@ -30,3 +30,22 @@ module.exports.voiceChannelUpdate = async function (username,userId,type) {
     })
     return promise;
 }
+
+module.exports.sabahlamaUpdate = async function (idList) {
+    idList.forEach(async function (id) {
+
+        console.log(id)
+        promise = await new Promise((resolve, reject) => {
+            let sql = "Update information SET Sabahlama = Sabahlama + 1 WHERE userId = ?"
+            let condition = [id]
+
+            connection.query(sql, condition, async (err, result) => {
+                if (err) reject(err)
+                resolve(result);
+            })
+        })
+    })
+
+
+
+}

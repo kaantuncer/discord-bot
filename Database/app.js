@@ -36,7 +36,6 @@ app.get('/createInfoTable', (req, res) => {
         res.send('Post table created')
     })
 })
-
 app.get('/dropAllTables', (req, res) => {
     
     let sql = "DROP TABLE reactions"
@@ -47,6 +46,17 @@ app.get('/dropAllTables', (req, res) => {
         res.send('Table dropped')
     })
     
+
+})
+
+app.get('/addNewColumn', (req, res) => {
+    
+    let sql = "ALTER TABLE information ADD COLUMN Sabahlama INT not NULL";
+    connection.query(sql, (err, result) => {
+        if (err) throw err;
+        console.log(result);
+        res.send('Column added')
+    })
 
 })
 */
@@ -202,8 +212,6 @@ app.get('/getTimerMessageUserSet', async (req, res) => {
 })
 
 app.post('/voiceChannelUpdate', async (req, res) => {
-
-
     try {
         const username = req.body.username
         const userId = req.body.userId
@@ -218,6 +226,21 @@ app.post('/voiceChannelUpdate', async (req, res) => {
     catch (e) {
         console.log(error)
         res.status(400).send(error)
+    }
+})
+
+app.post('/sabahlamaUpdate', async (req, res) => {
+    try {
+        const idList = req.body.idList
+        if (!idList) {
+            return res.status(500).send();
+        }
+        const result = await voiceChannelDao.sabahlamaUpdate(idList)
+        res.status(200).send(result)
+    }
+    catch (e) {
+        console.log(e)
+        res.status(400).send(e)
     }
 })
 
